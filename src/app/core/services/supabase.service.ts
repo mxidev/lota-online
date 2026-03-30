@@ -6,16 +6,17 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root',
 })
 export class SupabaseService {
-  private client: SupabaseClient;
+  private client = createClient(
+    environment.supabaseUrl,
+    environment.supabaseAnonKey,
+    {
+      db: {
+        schema: 'lota',
+      },
+    }
+  );
 
-  constructor() {
-    this.client = createClient(
-      environment.supabaseUrl,
-      environment.supabaseAnonKey
-    );
-  }
-
-  getClient(): SupabaseClient {
+  getClient() {
     return this.client;
   }
 }
