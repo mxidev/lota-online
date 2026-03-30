@@ -1,0 +1,42 @@
+<div class="home-container">
+  <div class="card">
+    <h1>Lota Online</h1>
+    <p>Entra con tu apodo, crea una sala o únete con un código.</p>
+
+    <form [formGroup]="form">
+      <label for="nickname">Apodo</label>
+      <input
+        id="nickname"
+        type="text"
+        formControlName="nickname"
+        placeholder="Ej: Maxi"
+      />
+
+      @if (form.controls.nickname.touched && form.controls.nickname.invalid) {
+        <small class="error">Ingresa un apodo válido.</small>
+      }
+
+      <label for="roomCode">Código de sala</label>
+      <input
+        id="roomCode"
+        type="text"
+        formControlName="roomCode"
+        placeholder="Ej: LOTA-7KQ2"
+      />
+
+      @if (errorMessage) {
+        <p class="error">{{ errorMessage }}</p>
+      }
+
+      <div class="actions">
+        <button type="button" (click)="createRoom()" [disabled]="loading">
+          {{ loading ? 'Cargando...' : 'Crear sala' }}
+        </button>
+
+        <button type="button" (click)="joinRoom()" [disabled]="loading">
+          {{ loading ? 'Cargando...' : 'Unirse a sala' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
