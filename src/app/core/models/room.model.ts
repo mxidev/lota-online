@@ -6,6 +6,7 @@ export interface Room {
   host_id: string;
   status: RoomStatus;
   created_at: string;
+  started_at: string | null;
 }
 
 export interface RoomPlayer {

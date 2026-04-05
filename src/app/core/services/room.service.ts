@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from './supabase.service';
 import { LobbyData, Room, RoomPlayer } from '../models/room.model';
 
@@ -108,6 +109,63 @@ export class RoomService {
       players: (players ?? []) as RoomPlayer[],
       currentPlayerId,
     };
+  }
+
+  async setReady(roomId: string, playerId: string, isReady: boolean): Promise<void> {
+    const supabase = this.supabaseService.getClient();
+
+    const { error } = await supabase
+      .from('room_players')
+      .update({ is_ready: isReady })
+      .eq('room_id', roomId)
+      .eq('player_id', playerId);
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  subscribeToLobby(
+    roomId: string,
+    onRoomChange: () => Promise<void>,
+    onPlayerChange: () => Promise<void>
+  ): RealtimeChannel {
+    const supabase = this.supabaseService.getClient();
+
+    const channel = supabase
+      .channel(`lobby:${roomId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'lota',
+          table: 'rooms',
+          filter: `id=eq.${roomId}`,
+        },
+        async () => {
+          await onRoomChange();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'lota',
+          table: 'room_players',
+          filter: `room_id=eq.${roomId}`,
+        },
+        async () => {
+          await onPlayerChange();
+        }
+      )
+      .subscribe();
+
+    return channel;
+  }
+
+  removeChannel(channel: RealtimeChannel): void {
+    const supabase = this.supabaseService.getClient();
+    supabase.removeChannel(channel);
   }
 
   private async generateUniqueRoomCode(): Promise<string> {
