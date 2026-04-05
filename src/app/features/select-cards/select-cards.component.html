@@ -1,0 +1,51 @@
+<div class="select-cards-container">
+  <div class="card">
+    @if (loading) {
+      <p>Cargando cartones...</p>
+    } @else if (errorMessage) {
+      <p class="error">{{ errorMessage }}</p>
+      <a [routerLink]="['/lobby', roomCode]">Volver a la sala</a>
+    } @else {
+      <h1>Elige tus 2 cartones</h1>
+      <p>Seleccionados: {{ selectedCardIds.size }} / 2</p>
+
+      <div class="cards-grid">
+        @for (card of availableCards; track trackByCardId($index, card)) {
+          <button
+            type="button"
+            class="lottery-card"
+            [class.selected]="isSelected(card.id)"
+            (click)="toggleCard(card.id)"
+          >
+            <div class="card-title">{{ card.name }}</div>
+
+            <div class="grid">
+              @for (row of card.grid; track $index) {
+                <div class="row">
+                  @for (cell of row; track $index) {
+                    <span class="cell">{{ cell }}</span>
+                  }
+                </div>
+              }
+            </div>
+          </button>
+        }
+      </div>
+
+      @if (errorMessage) {
+        <p class="error">{{ errorMessage }}</p>
+      }
+
+      <div class="actions">
+        <a [routerLink]="['/lobby', roomCode]">Volver</a>
+        <button
+          type="button"
+          (click)="confirmSelection()"
+          [disabled]="saving || selectedCardIds.size !== 2"
+        >
+          {{ saving ? 'Guardando...' : 'Confirmar cartones' }}
+        </button>
+      </div>
+    }
+  </div>
+</div>
