@@ -1,0 +1,104 @@
+.game-container {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #f7fafc;
+}
+
+.card {
+  width: 100%;
+  max-width: 1100px;
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.current-number-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.label {
+  font-weight: 600;
+}
+
+.number-ball {
+  width: 96px;
+  height: 96px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 32px;
+  font-weight: 800;
+  background: #eff6ff;
+  border: 3px solid #2563eb;
+}
+
+.section {
+  margin-top: 28px;
+}
+
+.history-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.history-item {
+  min-width: 40px;
+  height: 55px;
+  padding: 0 8px;
+  border-radius: 50px;
+  display: grid;
+  place-items: center;
+  background: #f3f6fb;
+  border: 2px red solid;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.lottery-card {
+  border: 2px solid #dbe4f0;
+  background: aquamarine;
+  padding: 14px;
+}
+
+.card-title {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.cell {
+  display: grid;
+  place-items: center;
+  min-height: 36px;
+  background: white;
+  font-size: 14px;
+}
+
+.error {
+  color: #b42318;
+}

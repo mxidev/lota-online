@@ -1,0 +1,48 @@
+<div class="game-container">
+  <div class="card">
+    @if (loading) {
+      <p>Cargando partida...</p>
+    } @else if (errorMessage) {
+      <p class="error">{{ errorMessage }}</p>
+    } @else if (gameData) {
+      <h1>Partida {{ gameData.room.code }}</h1>
+
+      <div class="current-number-box">
+        <span class="label">Número actual</span>
+        <div class="number-ball">
+          {{ currentNumber ?? '-' }}
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Sorteados</h2>
+        <div class="history-list">
+          @for (number of drawHistory; track $index) {
+            <span class="history-item">{{ number }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="section">
+        <!-- <h2>Mis cartones</h2> -->
+        <div class="cards-grid">
+          @for (card of gameData.myCards; track card.id) {
+            <div class="lottery-card">
+              <div class="card-title">{{ card.name }}</div>
+
+              <div class="grid">
+                @for (row of card.grid; track $index) {
+                  <div class="row">
+                    @for (cell of row; track $index) {
+                      <span class="cell">{{ cell }}</span>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>
