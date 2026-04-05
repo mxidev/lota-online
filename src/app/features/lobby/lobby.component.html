@@ -37,8 +37,18 @@
                 </span>
               </div>
 
+              <div>
+                <a [routerLink]="['/lobby', lobbyData.room.code, 'cards']">
+                  Elegir cartones
+                </a>
+              </div>
+
               <div class="status-pill" [class.ready]="player.is_ready">
-                {{ player.is_ready ? 'Listo' : 'Esperando' }}
+                {{
+                  player.has_selected_cards
+                    ? (player.is_ready ? 'Cartones listos' : 'Cartones elegidos')
+                    : 'Sin cartones'
+                }}
               </div>
             </li>
           }

@@ -46,7 +46,10 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   get allPlayersReady(): boolean {
     if (!this.lobbyData || this.lobbyData.players.length === 0) return false;
-    return this.lobbyData.players.every((player) => player.is_ready);
+
+    return this.lobbyData.players.every(
+      (player) => player.has_selected_cards && player.is_ready
+    );
   }
 
   get isHost(): boolean {
@@ -101,6 +104,12 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   async toggleReady(): Promise<void> {
     if (!this.lobbyData || !this.currentPlayer) return;
+
+    if (!this.currentPlayer.has_selected_cards && !this.currentPlayer.is_ready) {
+      this.errorMessage = 'Primero debes elegir tus 2 cartones.';
+      this.cdr.detectChanges();
+      return;
+    }
 
     try {
       this.readyLoading = true;
