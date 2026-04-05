@@ -71,8 +71,12 @@
         }
 
         @if (isHost) {
-          <button type="button" [disabled]="!allPlayersReady">
-            Iniciar partida
+          <button
+            type="button"
+            (click)="startGame()"
+            [disabled]="!allPlayersReady || startLoading"
+          >
+            {{ startLoading ? 'Iniciando...' : 'Iniciar partida' }}
           </button>
         }
       </div>

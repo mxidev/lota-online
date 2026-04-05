@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { AuthService } from '../../core/services/auth.service';
 import { LobbyData } from '../../core/models/room.model';
@@ -18,6 +18,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private roomService = inject(RoomService);
   private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
   private channel: RealtimeChannel | null = null;
 
   loading = true;
@@ -25,6 +26,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   errorMessage = '';
   copiedMessage = '';
   lobbyData: LobbyData | null = null;
+  startLoading = false;
 
   async ngOnInit(): Promise<void> {
     await this.loadLobby();
@@ -74,6 +76,11 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
       this.lobbyData = await this.roomService.getLobbyData(roomCode, userId);
       this.errorMessage = '';
+
+      if (this.lobbyData.room.status === 'in_progress') {
+        await this.router.navigate(['/game', this.lobbyData.room.code]);
+        return;
+      }
     } catch (error) {
       console.error(error);
       this.errorMessage =
@@ -144,6 +151,26 @@ export class LobbyComponent implements OnInit, OnDestroy {
       setTimeout(() => {
         this.copiedMessage = '';
       }, 1500);
+    }
+  }
+
+  async startGame(): Promise<void> {
+    if (!this.lobbyData || !this.allPlayersReady) return;
+
+    try {
+      this.startLoading = true;
+
+      await this.roomService.startGame(
+        this.lobbyData.room.id,
+        this.lobbyData.currentPlayerId
+      );
+    } catch (error) {
+      console.error(error);
+      this.errorMessage =
+        error instanceof Error ? error.message : 'No se pudo iniciar la partida.';
+    } finally {
+      this.startLoading = false;
+      this.cdr.detectChanges();
     }
   }
 }
