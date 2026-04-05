@@ -37,12 +37,6 @@
                 </span>
               </div>
 
-              <div>
-                <a [routerLink]="['/lobby', lobbyData.room.code, 'cards']">
-                  Elegir cartones
-                </a>
-              </div>
-
               <div class="status-pill" [class.ready]="player.is_ready">
                 {{
                   player.has_selected_cards
@@ -56,15 +50,25 @@
       </div>
 
       <div class="actions">
-        <button type="button" (click)="toggleReady()" [disabled]="readyLoading">
-          {{
-            readyLoading
-              ? 'Actualizando...'
-              : currentPlayer?.is_ready
-                ? 'Quitar listo'
-                : 'Estoy listo'
-          }}
-        </button>
+        @if (currentPlayer) {
+          <a [routerLink]="['/lobby', lobbyData.room.code, 'cards']">
+            {{
+              currentPlayer.has_selected_cards
+                ? 'Cambiar cartones'
+                : 'Elegir cartones'
+            }}
+          </a>
+
+          <button type="button" (click)="toggleReady()" [disabled]="readyLoading">
+            {{
+              readyLoading
+                ? 'Actualizando...'
+                : currentPlayer.is_ready
+                  ? 'Quitar listo'
+                  : 'Estoy listo'
+            }}
+          </button>
+        }
 
         @if (isHost) {
           <button type="button" [disabled]="!allPlayersReady">
