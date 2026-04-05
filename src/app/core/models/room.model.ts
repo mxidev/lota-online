@@ -7,6 +7,7 @@ export interface Room {
   status: RoomStatus;
   created_at: string;
   started_at: string | null;
+  current_number: number;
 }
 
 export interface RoomPlayer {

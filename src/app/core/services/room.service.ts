@@ -3,6 +3,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from './supabase.service';
 import { LobbyData, Room, RoomPlayer } from '../models/room.model';
 import { Card } from '../models/card.model';
+import { DrawEvent, GameData } from '../models/game.model';
 
 @Injectable({
   providedIn: 'root',
@@ -297,5 +298,222 @@ export class RoomService {
     if (playerUpdateError) {
       throw playerUpdateError;
     }
+  }
+
+  async startGame(roomId: string, hostUserId: string): Promise<void> {
+    const supabase = this.supabaseService.getClient();
+
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('id', roomId)
+      .single();
+
+    if (roomError || !room) {
+      throw new Error('No se pudo cargar la sala.');
+    }
+
+    if (room.host_id !== hostUserId) {
+      throw new Error('Solo el anfitrión puede iniciar la partida.');
+    }
+
+    const { data: players, error: playersError } = await supabase
+      .from('room_players')
+      .select('*')
+      .eq('room_id', roomId);
+
+    if (playersError) {
+      throw playersError;
+    }
+
+    const everyoneReady = (players ?? []).every(
+      (player: any) => player.has_selected_cards && player.is_ready
+    );
+
+    if (!everyoneReady) {
+      throw new Error('Todos los jugadores deben haber elegido cartones y estar listos.');
+    }
+
+    const sequence = this.generateDrawSequence(1, 45);
+
+    const { error: sequenceError } = await supabase
+      .from('draw_sequences')
+      .upsert({
+        room_id: roomId,
+        numbers: sequence,
+      });
+
+    if (sequenceError) {
+      throw sequenceError;
+    }
+
+    const firstNumber = sequence[0];
+
+    const { error: roomUpdateError } = await supabase
+      .from('rooms')
+      .update({
+        status: 'in_progress',
+        started_at: new Date().toISOString(),
+        current_number: firstNumber,
+        draw_index: 1,
+      })
+      .eq('id', roomId);
+
+    if (roomUpdateError) {
+      throw roomUpdateError;
+    }
+
+    const { error: firstDrawError } = await supabase
+      .from('draw_events')
+      .insert({
+        room_id: roomId,
+        number: firstNumber,
+        draw_order: 1,
+      });
+
+    if (firstDrawError) {
+      throw firstDrawError;
+    }
+  }
+
+  async drawNextNumber(roomId: string): Promise<void> {
+    const supabase = this.supabaseService.getClient();
+
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('id', roomId)
+      .single();
+
+    if (roomError || !room) {
+      throw new Error('No se pudo cargar la sala.');
+    }
+
+    if (room.status !== 'in_progress') {
+      throw new Error('La partida no está en progreso.');
+    }
+
+    const { data: sequenceRow, error: sequenceError } = await supabase
+      .from('draw_sequences')
+      .select('*')
+      .eq('room_id', roomId)
+      .single();
+
+    if (sequenceError || !sequenceRow) {
+      throw new Error('No se encontró la secuencia de sorteo.');
+    }
+
+    const sequence = sequenceRow.numbers as number[];
+    const nextIndex = room.draw_index as number;
+
+    if (nextIndex >= sequence.length) {
+      return;
+    }
+
+    const nextNumber = sequence[nextIndex];
+    const nextOrder = nextIndex + 1;
+
+    const { error: drawError } = await supabase
+      .from('draw_events')
+      .insert({
+        room_id: roomId,
+        number: nextNumber,
+        draw_order: nextOrder,
+      });
+
+    if (drawError) {
+      throw drawError;
+    }
+
+    const { error: updateError } = await supabase
+      .from('rooms')
+      .update({
+        current_number: nextNumber,
+        draw_index: nextIndex + 1,
+      })
+      .eq('id', roomId);
+
+    if (updateError) {
+      throw updateError;
+    }
+  }
+
+  async getGameData(roomCode: string, currentPlayerId: string): Promise<GameData> {
+    const supabase = this.supabaseService.getClient();
+
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('code', roomCode)
+      .single();
+
+    if (roomError || !room) {
+      throw new Error('No se pudo cargar la sala.');
+    }
+
+    const myCards = await this.getSelectedCards(room.id, currentPlayerId);
+
+    const { data: drawEvents, error: drawError } = await supabase
+      .from('draw_events')
+      .select('*')
+      .eq('room_id', room.id)
+      .order('draw_order', { ascending: true });
+
+    if (drawError) {
+      throw drawError;
+    }
+
+    return {
+      room,
+      myCards,
+      drawEvents: (drawEvents ?? []) as DrawEvent[],
+    };
+  }
+
+  subscribeToGame(
+    roomId: string,
+    onRoomChange: () => Promise<void>,
+    onDrawChange: () => Promise<void>
+  ): RealtimeChannel {
+    const supabase = this.supabaseService.getClient();
+
+    return supabase
+      .channel(`game:${roomId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'lota',
+          table: 'rooms',
+          filter: `id=eq.${roomId}`,
+        },
+        async () => {
+          await onRoomChange();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'lota',
+          table: 'draw_events',
+          filter: `room_id=eq.${roomId}`,
+        },
+        async () => {
+          await onDrawChange();
+        }
+      )
+      .subscribe();
+  }
+
+  private generateDrawSequence(min: number, max: number): number[] {
+    const numbers = Array.from({ length: max - min + 1 }, (_, index) => min + index);
+
+    for (let i = numbers.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+    }
+
+    return numbers;
   }
 }
