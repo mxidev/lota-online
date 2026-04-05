@@ -8,11 +8,26 @@
 
 .card {
   width: 100%;
-  max-width: 620px;
+  max-width: 700px;
   background: white;
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.copy-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
 }
 
 .section {
@@ -20,7 +35,49 @@
 }
 
 .player-list {
-  padding-left: 18px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.player-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.status-pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef2f7;
+  font-size: 14px;
+}
+
+.status-pill.ready {
+  background: #dcfce7;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .muted {

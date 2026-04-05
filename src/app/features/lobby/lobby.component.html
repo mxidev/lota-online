@@ -6,26 +6,61 @@
       <p class="error">{{ errorMessage }}</p>
       <a routerLink="/">Volver al inicio</a>
     } @else if (lobbyData) {
-      <h1>Sala {{ lobbyData.room.code }}</h1>
-      <p>Estado: <strong>{{ lobbyData.room.status }}</strong></p>
+      <div class="header-row">
+        <div>
+          <h1>Sala {{ lobbyData.room.code }}</h1>
+          <p>Estado: <strong>{{ lobbyData.room.status }}</strong></p>
+        </div>
+
+        <div class="copy-box">
+          <button type="button" (click)="copyRoomCode()">Copiar código</button>
+          @if (copiedMessage) {
+            <small>{{ copiedMessage }}</small>
+          }
+        </div>
+      </div>
 
       <div class="section">
         <h2>Jugadores</h2>
         <ul class="player-list">
           @for (player of lobbyData.players; track player.id) {
-            <li>
-              <span>
-                {{ player.nickname }}
-                @if (isCurrentPlayer(player.player_id)) {
-                  <strong>(tú)</strong>
-                }
-                @if (player.is_host) {
-                  <em> - anfitrión</em>
-                }
-              </span>
+            <li class="player-item">
+              <div>
+                <span>
+                  {{ player.nickname }}
+                  @if (isCurrentPlayer(player.player_id)) {
+                    <strong>(tú)</strong>
+                  }
+                  @if (player.is_host) {
+                    <em> - anfitrión</em>
+                  }
+                </span>
+              </div>
+
+              <div class="status-pill" [class.ready]="player.is_ready">
+                {{ player.is_ready ? 'Listo' : 'Esperando' }}
+              </div>
             </li>
           }
         </ul>
+      </div>
+
+      <div class="actions">
+        <button type="button" (click)="toggleReady()" [disabled]="readyLoading">
+          {{
+            readyLoading
+              ? 'Actualizando...'
+              : currentPlayer?.is_ready
+                ? 'Quitar listo'
+                : 'Estoy listo'
+          }}
+        </button>
+
+        @if (isHost) {
+          <button type="button" [disabled]="!allPlayersReady">
+            Iniciar partida
+          </button>
+        }
       </div>
 
       <a routerLink="/">Volver al inicio</a>
